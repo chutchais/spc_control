@@ -1,0 +1,137 @@
+{% load staticfiles %}
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Dashboard Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet"> -->
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'dist/css/dashboard.css' %}" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <!-- <script src="../../assets/js/ie-emulation-modes-warning.js"></script> -->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <!--  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script> -->
+      <!--<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script> -->
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">SigmaFlex</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Help</a></li>
+          </ul>
+          <form class="navbar-form navbar-right">
+            <input type="text" class="form-control" placeholder="Search...">
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li class="active"><a href="/dashboard">Overview <span class="sr-only">(current)</span></a></li>
+            <li><a href="#">SPC Execution Update</a></li>
+            <li><a href="#">Perform Tracker</a></li>
+            <li><a href="#">SPC Setting</a></li>
+          </ul>
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          {% if perform_param_detail_list %}
+
+          <h2 class="sub-header">Historical Result :<small>{{ perform_param_detail_list.first.perform_param.perform_id.tester_name }} -
+          {{ perform_param_detail_list.first.perform_param.param_name }} ({{ perform_param_detail_list.first.side }})</small> </h2>
+          <div class="table-responsive">
+              <img src= {% url 'graph' perform_param_detail_list.first.perform_param.perform_id.tester_name perform_param_detail_list.first.perform_param.param_name perform_param_detail_list.first.perform_param.perform_id.model perform_param_detail_list.first.side %}   />
+            <table class="table table-condensed">
+              <thead>
+                <tr>
+                    <th>Datetime</th>
+                    <th>Min value</th>
+                    <th>Max value</th>
+                    <th>Unit</th>
+                    <!-- <th>Rule Name</th>
+                    <th>Side</th>
+                    <th>Lower limit</th>
+                    <th>Upper limit</th>-->
+                    <th>Result</th>
+                    <th>Action(s)</th>
+                </tr>
+              </thead>
+              <tbody>
+
+
+                    {% for detail in perform_param_detail_list %}
+                        <tr>
+                        <td>{{ detail.perform_param.perform_id.datetime }}</td>
+                            <!--<td>{{ detail.perform_param.param_name }}</td> -->
+                        <td>{{ detail.perform_param.min_value|stringformat:".4g" }}</td>
+                        <td>{{ detail.perform_param.max_value|stringformat:".4g" }}</td> <!--.3e -->
+                        <td>{{ detail.perform_param.unit_name }}</td>
+                        <td>
+                                            {% if detail.execute_result %}
+                                                <span class="label label-success">Passed</span>
+                                            {% else %}
+                                                <span class="label label-danger">Failed</span>
+                                            {% endif %}
+
+                                        </td>
+                            <td>{% for log in detail.perform_param.perform_id.actions_set.all %}
+                            {{ log.action_details }}
+                         {% endfor %}
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <p>No SPC required parameter available</p>
+                {% endif %}
+              </tbody>
+            </table>
+          </div> <!-- End of Parametic detail -->
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+  <script href="{% static 'dist/js/jquery.min.js' %}" ></script>
+    <script href="{% static 'dist/js/bootstrap.min.js' %}" ></script>
+
+  </body>
+</html>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" hash="3571591736">
+    <data-source source="LOCAL" name="Django default" uuid="428924a1-812f-4c02-93a2-7428158a27ac">
+      <driver-ref>3666c37b-a99d-4ec1-a7d8-eb242ad52c03</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://127.0.0.1:5432/qpmz</jdbc-url>
+      <explain-plan-config>
+        <provider>com.intellij.database.plan.sqlite.SqliteExplainPlanProvider</provider>
+      </explain-plan-config>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/postgresql-9.4-1201.jdbc4.jar</url>
+        </library>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/postgresql-driver-license.txt</url>
+        </library>
+      </libraries>
+    </data-source>
+  </component>
+</project>

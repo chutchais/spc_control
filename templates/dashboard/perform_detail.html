@@ -1,0 +1,237 @@
+{% load staticfiles %}
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Celestica SPC Control system</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">-->
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'dist/css/dashboard.css' %}" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <!-- <script src="../../assets/js/ie-emulation-modes-warning.js"></script> -->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <!--  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script> -->
+      <!--<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script> -->
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">SigmaFlex</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Help</a></li>
+          </ul>
+          <form class="navbar-form navbar-right">
+            <input type="text" class="form-control" placeholder="Search...">
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li class="active"><a href="../../">Tester(s) Validation <span class="sr-only">(current)</span></a></li>
+          </ul>
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          {% if perform_detail_list %}
+
+          <h2 class="sub-header">Parameter(s) Performing Result :<small>{{ perform_detail_list.first.perform_id.tester_name }}</small> </h2>
+          <div class="table-responsive">
+
+            <table class="table table-condensed">
+              <thead>
+                <tr>
+                    <th>Parameter Name</th>
+                    <th>Min value</th>
+                    <th>Max value</th>
+                    <th>Unit</th>
+                    <th>SPC Result</th>
+
+                </tr>
+              </thead>
+              <tbody>
+
+
+                    {% for detail in perform_detail_list %}
+                        <tr><td>{{ detail.param_name }}</td>
+                        <td>{{ detail.min_value|stringformat:".4g" }}</td>
+                        <td>{{ detail.max_value|stringformat:".4g" }}</td> <!--.3e -->
+                        <td>{{ detail.unit_name }}</td>
+                        <td>
+                            <a href="{% url 'view_chart_detail' detail.perform_id.tester_name detail.param_name 'VALIDATE' %}">
+                            {% if detail.spc_result %}
+                            <span class="label label-success">Passed</span>
+                        {% else %}
+                            <span class="label label-danger">Failed</span>
+                        {% endif %}
+                        </a>
+                        </td>
+                        <td>
+                            {% if detail.spc_required %}
+                            <table class="table table-condensed">
+                                <thead>
+                                <tr>
+                                    <th>Rule Name</th>
+                                    <th>Side</th>
+                                    <th>Lower limit</th>
+                                    <th>Upper limit</th>
+                                    <th>Result</th>
+                                </tr>
+                              </thead>
+                                {% for spcs in detail.performexecute_set.all %}
+                                    <tr><td>{{ spcs.rule_name_id }}</td>
+                                        <td>{{ spcs.side }}</td>
+                                        <td>{{ spcs.spc_lower_limit|stringformat:".4g" }}</td>
+                                        <td>{{ spcs.spc_upper_limit|stringformat:".4g" }}</td>
+                                        <td>
+                                            <!-- <a href=../{{ detail.perform_id.tester_name }}/{{ detail.param_name }}/{{ spcs.rule_name_id }}/{{ spcs.side }}/> -->
+                                                <a href="{% url 'view_param_detail' detail.perform_id.tester_name detail.param_name spcs.rule_name_id spcs.side 'VALIDATE' %}">
+                                                {% if spcs.execute_result %}
+                                                <button type="button" class="btn btn-xs btn-success">Passed</button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-xs btn-danger">Failed</button>
+                                            {% endif %}
+                                            </a>
+                                        </td></tr>
+                                {% empty %}
+                                    <tr><td>Not found SPC execution result </td></tr>
+                                {% endfor %}
+                            </table>
+                            {% endif %}
+                        </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <p>No SPC required parameter available---</p>
+                {% endif %}
+              </tbody>
+            </table>
+          </div> <!-- End of Parametic detail -->
+
+            <h2 class="sub-header">Golden Performance : <small>{{ perform_detail_list.first.perform_id.sn }}</small> </h2>
+          <div class="table-responsive">
+              <div class="table-responsive">
+                <table class="table table-condensed">
+              <thead>
+                <tr>
+                    <th>Datetime</th>
+                    <th>Tester Name</th>
+                    <th>Result</th>
+                    <th>Parameter</th>
+                    <th>Value(Min)</th>
+                    <th>Value(Max)</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                {% if gu_tracking_list %}
+                    {% for detail in gu_tracking_list %}
+                        <tr><td>{{ detail.datetime }}</td>
+                        <td>{{ detail.perform_id.tester_name }}</td>
+                        <td>{% if detail.result %}
+                            <span class="label label-success">Passed</span>
+                        {% else %}
+                            <span class="label label-danger">Failed</span>
+                        {% endif %}</td>
+
+                        <td>{{ detail.param_name }}</td>
+                        <td>{{ detail.min_value|stringformat:".4g" }}</td>
+                        <td>{{ detail.max_value|stringformat:".4g" }}</td>
+                        <td>{{ detail.unit_name }}</td>
+                        <td>{% if detail.spc_result %}
+                            <span class="label label-success">Passed</span>
+                        {% else %}
+                            <span class="label label-danger">Failed</span>
+                        {% endif %}</td>
+
+                        </tr>
+
+
+                    {% endfor %}
+                {% else %}
+                    <p>No Golden unit data available</p>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          </div>
+
+            <h2 class="sub-header">Tester Performance:<small>(Last 10 excecutions)</small> </h2>
+          <div class="table-responsive">
+                <table class="table table-condensed">
+              <thead>
+                <tr>
+                    <th>Datetime</th>
+                    <th>Serial number</th>
+                    <th>Model</th>
+                    <th>Result</th>
+                    <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                {% if perform_tracking_list %}
+                    {% for detail in perform_tracking_list %}
+                        <tr><td>{{ detail.datetime }}</td>
+                        <td>{{ detail.sn }}</td>
+                        <td>{{ detail.model }}</td>
+                        <td>{% if detail.result %}
+                            <button type="button" class="btn btn-xs btn-success">Passed</button>
+                        {% else %}
+                            <button onclick="" type="button" class="btn btn-xs btn-danger">Failed</button>
+                        {% endif %}</td>
+                        <td>{{ detail.actions_set.last.action_details }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <p>No Execute data available</p>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script href="{% static 'dist/js/jquery.min.js' %}" ></script>
+    <script href="{% static 'dist/js/bootstrap.min.js' %}" ></script>
+  </body>
+</html>
