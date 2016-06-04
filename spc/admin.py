@@ -154,7 +154,7 @@ class RuleMasterAdmin(admin.ModelAdmin):
     list_display = ('rule_name','type','data_point_count','sigma_zone','datetime','active')
     fieldsets = [
         (None,               {'fields': ['rule_name']}),
-        ('Rule detail', {'fields': ['type','data_point_count','sigma_zone']})
+        ('Rule detail', {'fields': ['type','data_point_count','sigma_zone','active']})
     ]
 
 

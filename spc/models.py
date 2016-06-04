@@ -313,11 +313,25 @@ class PerformingDetail(models.Model):
                             final_result = False
 
                     if rm.type == "POINTINROW":
+
                         #rm.data_point_count (tester,parameter)
+                        if rm.sigma_zone == 1:
+                            zone_min=ps.lcl1s
+                            zone_max=ps.ucl1s
+                        elif rm.sigma_zone == 2:
+                            zone_min=ps.lcl2s
+                            zone_max=ps.ucl2s
+                        elif rm.sigma_zone == 3:
+                            zone_min=ps.lcl
+                            zone_max=ps.ucl
+                        else:
+                            zone_min=ps.lcl1s
+                            zone_max=ps.ucl1s
+
                         execute_point = self.rule_pointInRow(self.perform_id.tester_name,
-                                                        self.param_name, rm.data_point_count,
-                                                        ps.control_side,rm.rule_name,
-                                                        ps.lcl1s,ps.ucl1s)
+                                                             self.param_name, rm.data_point_count,
+                                                             ps.control_side,rm.rule_name,
+                                                             zone_min, zone_max)
                         hit_rule = execute_point.get('hit_rule')
                         execute_res = execute_point.get('execute_response')
                         final_resp.update({'Point in Row %s' %ps.control_side : execute_res})
@@ -468,9 +482,8 @@ class PerformingDetail(models.Model):
 
         #tester_name,param_name,model (self)
 
-
     def rule_pointInRow(self , tester_name, param_name,data_size, vside_control,
-                        rule_name, sigma_zone_min ,sigma_zone_max):
+                        rule_name, sigma_zone_min , sigma_zone_max):
 
         pd = PerformingDetail.objects.filter(param_name=param_name,
                                              perform_id__tester_name=tester_name).order_by('-datetime')[:data_size]
@@ -487,33 +500,44 @@ class PerformingDetail(models.Model):
             is_break_rule = False
             execute_result = "Data is not enough to calculate %s points in row" % data_size
         else:
-
-            if vside_control == 'MIN':
-                min_point = pd.aggregate(Min('min_value')).get('min_value__min') or 0
-                max_point = pd.aggregate(Max('min_value')).get('min_value__max') or 0
-                execute_result = "Result -- Failed ,Data %s" % data_list
-                if (float(min_point) <= sigma_zone_max) or (float(max_point) >= sigma_zone_min ):
+            for mvalue in pd:
+                if vside_control == 'MIN':
+                    if (mvalue.min_value >= sigma_zone_min) and (mvalue.min_value <= sigma_zone_max):
+                        is_break_rule = False
+                        execute_result = "Result -- Passed: some data point in sigma zone"
+                        break
+                elif vside_control == 'MAX':
+                    if (mvalue.max_value >= sigma_zone_min) and (mvalue.max_value <= sigma_zone_max):
+                        is_break_rule = False
+                        execute_result = "Result -- Passed: some data point in sigma zone"
+                        break
+                else:
                     is_break_rule = False
-                    execute_result = "Result -- Passed ,Data : %s" % data_list
+                    execute_result = "Result -- Passed: system doesn't support for BOTH"
+                    break
 
-            elif vside_control == 'MAX':
-                min_point = pd.aggregate(Min('max_value')).get('max_value__min') or 0
-                max_point = pd.aggregate(Max('max_value')).get('max_value__max') or 0
-                execute_result = "Result -- Failed ,Data %s" % data_list
+            #if vside_control == 'MIN':
+            #    min_point = pd.aggregate(Min('min_value')).get('min_value__min') or 0
+            #    max_point = pd.aggregate(Max('min_value')).get('min_value__max') or 0
+            #    execute_result = "Result -- Failed ,Data %s" % data_list
+            #    if (float(min_point) >= sigma_zone_min and float(min_point) <= sigma_zone_max):
+            #        is_break_rule = False
+            #        execute_result = "Result -- Passed ,Data : %s" % data_list
 
-                if float(min_point) <= sigma_zone_max and float(min_point) >= sigma_zone_min :
-                    is_break_rule = False
-                    execute_result = "Result -- Passed ,Data : %s" % data_list
+            #elif vside_control == 'MAX':
+            #    min_point = pd.aggregate(Min('max_value')).get('max_value__min') or 0
+            #    max_point = pd.aggregate(Max('max_value')).get('max_value__max') or 0
+            #    execute_result = "Result -- Failed ,Data %s" % data_list
 
-                if float(max_point) <= sigma_zone_max and float(max_point) >= sigma_zone_min :
-                    is_break_rule = False
-                    execute_result = "Result -- Passed ,Data : %s" % data_list
+            #   if (float(min_point) >= sigma_zone_min) or (float(max_point) <= sigma_zone_max):
+            #        is_break_rule = False
+            #        execute_result = "Result -- Passed ,Data : %s" % data_list
 
 
-            elif vside_control == 'BOTH':
-                #1st Rule
-                is_break_rule = False
-                execute_result = "Result -- Passed"
+            #elif vside_control == 'BOTH':
+            #    #1st Rule
+            #    is_break_rule = False
+            #    execute_result = "Result -- Passed"
 
 
         #Save to PerformExcute table

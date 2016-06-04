@@ -647,10 +647,13 @@ def graph_histogram(request,operation_name,model_name,
     means = pt.aggregate(mean=Avg('max_value')).get('mean')
     stddev = pt.aggregate(stddev=StdDev('max_value')).get('stddev')
     x = pt.values_list('max_value', flat=True)
-    limit_min = pt.aggregate(min=Min('lower_limit')).get('min')
+
+
+    #limit_min = pt.aggregate(min=Min('lower_limit')).get('min')
+    #limit_max = pt.aggregate(max=Min('upper_limit')).get('max')
+
+    limit_min = pt.aggregate(min=Max('lower_limit')).get('min')
     limit_max = pt.aggregate(max=Min('upper_limit')).get('max')
-
-
 
     fig = plt.Figure()
     ax = fig.add_subplot(211) #211 ,111
